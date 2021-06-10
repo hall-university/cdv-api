@@ -1,5 +1,4 @@
 import pickle
-from typing import Optional
 
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
@@ -13,12 +12,12 @@ class Modeler:
     def __init__(
         self,
         data_source: str = None,
-        classifier: Optional[DecisionTreeClassifier, RandomForestClassifier] = None
+        classifier=None
     ):
         self.data_source = data_source
-        self._df: pd.DataFrame = self.create_dataset()
         self.classifier = classifier
         self.classification_report = None
+        self._df = None
 
     @property
     def df(self):
@@ -31,7 +30,7 @@ class Modeler:
         return pd.read_csv(self.data_source)
 
     def na_values_present(self, df: pd.DataFrame) -> bool:
-        return df.isina().values.any()
+        return df.isna().values.any()
 
     def replace_na_values(self, df: pd.DataFrame) -> pd.DataFrame:
         # TODO I think there is no point in checking if na values are in the dataset.
@@ -78,4 +77,18 @@ class Modeler:
         return cls(classifier=classifier)
 
     def pipeline(self):
-        ...
+        self._df = df = self.create_binary_quality(
+            self.replace_dummies(self.replace_na_values(self.create_dataset()))
+        )
+        x, y = self.split_dependent_independent(df)
+        x = self.standardize(x)
+        x_train, x_test, y_train, y_test = self.train_test_split(x, y)
+        self.fit(x_train, y_train)
+        y_predict = self.predict(x_test)
+        self.model_summary(y_test, y_predict)
+
+
+model = Modeler(data_source='winequalityN.csv', classifier=RandomForestClassifier())
+model.pipeline()
+print(model.classification_report)
+model.serialize()
