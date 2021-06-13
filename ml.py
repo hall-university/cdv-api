@@ -78,7 +78,11 @@ class Modeler:
 
     def pipeline(self):
         self._df = df = self.create_binary_quality(
-            self.replace_dummies(self.replace_na_values(self.create_dataset()))
+            self.replace_dummies(
+                self.replace_na_values(
+                    self.create_dataset()
+                )
+            )
         )
         x, y = self.split_dependent_independent(df)
         x = self.standardize(x)
